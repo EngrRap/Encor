@@ -1,0 +1,490 @@
+Day1: Intro to Encor:
+How to be a modern Network Engineer
+
+Task1: How to setup your Home CCNP
+EncorLaAB.
+1. Install wvmware 17 por:
+key
+2. Install 7zip
+3. CSR1000v insttall at home
+
+Task2 Basic CSR1000V config
+
+conf t
+no logging console
+no ip domain-lookup
+int gi1
+ip add dhcp 
+no shut
+int gi 2
+ip add dhcp
+no shut
+
+
+Task3: Credentials:
+linuxHayup:
+root/C1sc0123
+
+CiscoCSRv
+admin/password
+rm -r /etc/udev/
+
+
+Taks4: how a ccie/ccnp configures:
+config t
+alias exec sc sh run | section
+
+
+
+config t
+hostname CoreTAAS
+no logging console
+no ip domain-lookup
+enable secret pass
+line con 0
+exec-timeout 0 0
+no login
+line vty 0 14
+exec-timeout 0 0
+no login
+interface vlan 1
+no shut
+ip address 10.41.1.2 255.255.255.0
+interface vlan 10
+no shut
+ip address 10.41.10.2 255.255.255.0
+interface vlan 100
+no shut
+ip address 10.41.100.2 255.255.255.0
+
+
+@coreBABA
+hostname CoreBaba
+no logging console
+no ip domain-lookup
+enable secret pass
+line con 0
+exec-timeout 0 0
+no login
+line vty 0 14
+exec-timeout 0 0
+no login
+interface vlan 1
+no shut
+ip address 10.41.1.4 255.255.255.0
+interface vlan 10
+no shut
+ip address 10.41.10.4 255.255.255.0
+interface vlan 100
+no shut
+ip address 10.41.100.4 255.255.255.0
+
+
+Task 5: CCNP switching skills
+1. Jailbreak/password recoverey
+a. Remove powe + long press sa mode
+b. flash_init
+c. rename flash:config.txt flash:config.bak
+d. dir flash:
+e. boot
+f ctrl c
+enable
+copy flash:config.bak run
+
+Skill2: hot wo know if you are using very expensive switch: Cisco, Juniper, HP, dell
+1. If wireshark catches stp/802.1d = expensive switch
+2. If stp captures reveak root identifier= 32768
+"bobo ang network engineer" - kasi very hackable kayo
+
+1. Trunk
+- switchport trunk encapsulation dot1q
+- switchport mode trunk
+2.Vlan
+3. VTP
+4. SVI
+5. Etherchannel LACP - link aggregation control protocol
+
+
+Task2: VTP on d1, d2, a1, a2:
+Core
+config t
+vtp domain ccnp
+vtp password encor
+vtp mode server
+vtp version 2
+end
+Client
+config t
+vtp domain ccnp
+vtp password encor
+vtp mode client
+vtp version 2
+end
+
+etherchannel
+Taas
+conf t
+interface range fa0/10-12
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+Baba
+conf t
+interface range fa0/10-12
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+How Lab3: sangkatutak na LACP etherchannel
+
+D1
+int config t
+int range e0/1-2
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e0/0, e0/3
+channel-group 2 mode active
+channel-protocol lacp
+int port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e1/2-3
+channel-group 3 mode active
+channel-protocol lacp
+int port-channel 3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+
+D2:
+int range e0/0, e0/3
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e0/1-2
+channel-group 2 mode active
+channel-protocol lacp
+int port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e1/2-3
+channel-group 3 mode active
+channel-protocol lacp
+int port-channel 3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+
+A1
+int range e0/1-2
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e0/3, e1/0
+channel-group 2 mode active
+channel-protocol lacp
+int port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+A2
+int range e0/1-2
+channel-group 2 mode active
+channel-protocol lacp
+int port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+int range e0/3, e0/0
+channel-group 1 mode active
+channel-protocol lacp
+int port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+
+Skill6: FHRP: First hop redundancy protocol
+HSRP: hot standby routing protocol - L3 switch
+VRRP: Virtual router redundancy protocol: anyBrand
+GLBP: Gloabl load balancing protocol: Any cisco switch
+
+
+
+Taas: (PLDT FIBER @Gi0/1)
+conf t
+track 1 interface gi 0/1 line-protocol
+!bantayan gi0/1 kung maputol
+int vlan 1
+standby 1 ip 10.41.1.6
+standby 1 preempt
+standby 1 priority 150
+standby 1 track 1 decrement 60
+end
+
+BABA
+Taas: (ConvergeFiber @Gi0/1)
+conf t
+track 1 interface gi 0/1 line-protocol
+!bantayan gi0/1 kung maputol
+int vlan 1
+standby 1 ip 10.41.1.6
+standby 1 preempt
+standby 1 priority 100
+end
+
+
+D1/D2: Gloabl load balancing protocol
+D1: primary gateway
+conf t
+track 1 interface et1/1 line-protocol
+interface vlan 20
+  glbp 1 ip 10.2.2.6
+  glbp 1 load-balancing weighted
+  glbp 1 priority 110
+  glbp 1 preempt
+  glbp 1 weighting track 1 decrement 20
+do sh glbp 1
+D2
+interface vlan 20
+  glbp 1 ip 10.2.2.6
+  glbp 1 load-balancing weighted
+  glbp 1 priority 100
+  glbp 1 preempt
+  glbp 1 weighting track 1 decrement 20
+do sh glbp 
+
+For VRRp
+D1
+track 1 interface et1/1 line-protocol
+interface vlan 20
+  vrrp 1 ip 10.2.2.6
+  vrrp 1 priority 110
+  vrrp 1 preempt
+  vrrp 1 track 1 decrement 20
+  vrrp 1 authentication md5 key-string CISCO
+end
+
+
+
+
+CCNP skilll 6: 64bit eigrp:
+
+D1
+conf t
+router eigrp encor
+  eigrp router-id 192.168.1.1
+  address-family ipv4 unicast autonomous-system 100
+  network 10.2.1.0 0.0.0.255
+  network 10.2.2.0 0.0.0.255
+  network 192.168.1.128 0.0.0.31
+  network 10.1.4.4 0.0.0.3
+  no auto-summary
+  exit-address-family
+
+D2
+conf t
+router eigrp encor
+  address-family ipv4 unicast autonomous-system 100
+  network 10.2.1.0 0.0.0.255
+  network 10.2.2.0 0.0.0.255
+  network 192.168.1.128 0.0.0.31
+  network 10.1.4.8 0.0.0.3
+  no auto-summary
+  exit-address-family
+
+R4
+conf t
+router eigrp 100
+  network 10.1.4.5 0.0.0.0
+  network 10.1.4.9 0.0.0.0
+  no auto-summary
+  exit-address-family
+
+
+
+CCNP skill7: Multi  area ospf
+R4
+conf t
+int lo1
+ip add 4.4.4.4 255.255.255.255
+router ospf 1
+  router-id 4.4.4.4
+  log-adjacency-changes
+  network 10.1.1.8 0.0.0.3 area 34
+  network 4.4.4.4 0.0.0.0 area 34
+R3
+int lo1
+ip add 3.3.3.3 255.255.255.255
+router ospf 1
+  router-id 3.3.3.3
+  log-adjacency-changes
+  network 10.1.1.8 0.0.0.3 area 34
+  network 10.1.1.4 0.0.0.3 area 0
+  network 3.3.3.3 0.0.0.0 area 0
+R2
+int lo1
+ip add 2.2.2.2 255.255.255.255
+router ospf 1
+  router-id 2.2.2.2
+  log-adjacency-changes
+  network 10.1.1.4 0.0.0.3 area 0
+  network 10.1.1.0 0.0.0.3 area 12
+  network 2.2.2.2 0.0.0.0 area 0
+R1
+int lo1
+ip add 1.1.1.1 255.255.255.255
+router ospf 1
+  router-id 1.1.1.1
+  log-adjacency-changes
+  network 10.1.1.0 0.0.0.3 area 12
+network 1.1.1.1 0.0.0.0 area 12
+
+
+OSPF for the ultralazy
+Taas/bababa
+conf t
+router ospf 1
+network 0.0.0.0 255.255.255.255 area 0
+end
+
+
+Encor Skill#8: Real world bgp
+@R1
+config t
+router bgp 1
+bgp log-neighbor-changes
+neighbor 209.9.9.3 remote-as 3
+neighbor 207.7.7.2 remote-as 2
+neighbor 208.8.8.4 remote-as 45
+network 10.0.0.0 mask 255.255.255.252
+network 209.9.9.0 mask 255.255.255.0
+network 208.8.8.0 mask 255.255.255.0
+network 207.7.7.0 mask 255.255.255.0
+
+@I1
+config t
+router bgp 45
+bgp log-neighbor-changes
+neighbor 45.4.5.5 remote-as 45
+neighbor 24.2.4.2 remote-as 2
+neighbor 208.8.8.1 remote-as 1
+network 208.8.8.0 mask 255.255.255.0
+network 45.4.5.0 mask 255.255.255.0
+network 24.2.4.0 mask 255.255.255.0
+network 44.44.44.44 mask 255.255.25.255
+!PretendYouAreaRealISP
+network 0.0.0.0
+ip route 0.0.0.0 0.0.0.0 Null 0
+ip route 10.0.0.0 255.0.0.0 208.8.8.1
+
+@I2: superingat
+config t
+router bgp 2
+bgp log-neighbor-changes
+neighbor 25.2.5.5 remote-as 45
+neighbor 24.2.4.4 remote-as 45
+neighbor 207.7.7.1 remote-as 1
+neigbor 32.3.2.3 remote-as 3
+network 25.2.5.0 255.255.255.0
+network 207.7.7.0 mask 255.255.255.0
+network 32.3.2.0 mask 255.255.255.0
+network 24.2.4.0 mask 255.255.255.0
+network 22.22.22.22 mask 255.255.255.255
+!PretendYouAreaRealISP
+network 0.0.0.0
+ip route 0.0.0.0 0.0.0.0 Null 0
+ip route 10.0.0.0 255.0.0.0 207.7.7.1
+end
+
+@I3
+config t
+router bgp 3
+bgp log-neighbor-changes
+neighbor 35.3.5.5 remote-as 45
+neighbor 32.3.2.2 remote-as 2
+neighbor 209.9.9.1 remote-as 1
+network 35.3.5.0 mask 255.255.255.0
+network 32.3.2.0 mask 255.255.255.0
+network 209.9.9.0 mask 255.255.255.0
+network 33.33.33.33 mask 255.255.25.255
+!PretendYouAreaRealISP
+network 0.0.0.0
+ip route 0.0.0.0 0.0.0.0 Null 0
+ip route 10.0.0.0 255.0.0.0 209.9.9.1
+end
+
+@I4 - Google ISP
+config t
+int lo 8
+ip add 8.8.8.8 255.255.255.255
+router bgp 45
+bgp log-neighbor-changes
+neighbor 45.4.5.4 remote-as 45
+neighbor 25.2.5.2 remote-as 2
+neighbor 35.3.5.3 remote-as 3
+network 45.4.5.0 mask 255.255.255.0
+network 25.2.5.0 mask 255.255.255.0
+network 35.3.5.0 mask 255.255.255.0
+network 8.8.8.8 mask 255.255.25.255
+end
+
+
+Encor Skill#9: OSPF to BGP route summarization
+BGP loves OSPF because of this command
+
+R1:
+conf t
+Router ospf 1
+default-information originate
+
+
+Redistribute OSPF inside EIGRP
+R4
+conf t
+no router eigrp 100
+router eigrp 100
+ network 10.1.4.4 0.0.0.3
+ network 10.1.4.8 0.0.0.3
+redistribute ospf 1 metric 10000 100 255 1 1500
+exit
+
+router ospf 1
+redistribute eigrp 100 subnet
+end
+
+P1
+conf t
+int e0/0
+ip add 10.2.1.101 255.255.255.0
+ip route 0.0.0.0 0.0.0.0 10.2.1.1
+
+P2
+conf t
+int e1/0
+ip add 10.2.1.201 255.255.255.0
+ip route 0.0.0.0 0.0.0.0 10.2.1.2
+do ping 8.8.8.8
+do traceroute 8.8.8.8
+
+
+Assignment
+1. Install vm17
+2. Extract RSThayup.zip
+3. CSR1000v
+4. P1 ping 8.8.8.8
